@@ -23,7 +23,7 @@ app.post('/api/send-quote', async (req, res) => {
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: 'sales@volunteerdrum.com',
+    to: 'dax@volunteerdrum.com',
     subject: 'FTL Quote Request',
     text: `
 FTL Quote Request
