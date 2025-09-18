@@ -1,53 +1,58 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const bodyParser = require("body-parser");
 
 const app = express();
 app.use(bodyParser.json());
 
-app.post('/api/send-quote', async (req, res) => {
-  const { from, quote } = req.body;
+// Quote logic function
+function calculateQuote({ destinationZip, totalWeight, itemCount }) {
+  const originZip = "37917";
 
-  if (!from || !quote) {
-    return res.status(400).json({ success: false, error: 'Missing email or quote data.' });
-  }
+  const miles = estimateMiles(originZip, destinationZip);
+  const baseRatePerMile = 1.25;
+  const weightFactor = totalWeight > 1000 ? 1.1 : 1.0;
+  const shippingCost = Math.round(miles * baseRatePerMile * weightFactor);
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
+  const unitCost = 4.25;
+  const costPerItemWithShipping = unitCost + (shippingCost / itemCount);
+  const totalCost = Math.round(costPerItemWithShipping * itemCount);
 
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: 'dax@volunteerdrum.com',
-    subject: 'FTL Quote Request',
-    text: `
-FTL Quote Request
-
-Submitted by: ${from}
-
-Destination ZIP: ${quote.destination}
-Distance: ${quote.miles} miles
-Total Weight: ${quote.totalWeight} lbs
-Shipping Cost: $${quote.shippingCost}
-Unit Cost (Pre-Shipping): $${quote.unitCost}
-Unit Cost (With Shipping): $${quote.costPerItemWithShipping}
-Total Cost: $${quote.totalCost}
-    `
+  return {
+    origin: originZip,
+    destination: destinationZip,
+    miles,
+    totalWeight,
+    itemCount,
+    shippingCost,
+    unitCost,
+    costPerItemWithShipping: parseFloat(costPerItemWithShipping.toFixed(2)),
+    totalCost
   };
+}
 
-  try {
-    await transporter.sendMail(mailOptions);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Email send error:', err);
-    res.status(500).json({ success: false, error: 'Failed to send email.' });
+// Dummy distance estimator
+function estimateMiles(fromZip, toZip) {
+  const zipDistanceMap = {
+    "37920": 12,
+    "38104": 380,
+    "30303": 210,
+    "10001": 650
+  };
+  return zipDistanceMap[toZip] || 250;
+}
+
+// API endpoint to return quote
+app.post("/api/get-quote", (req, res) => {
+  const { destinationZip, totalWeight, itemCount } = req.body;
+
+  if (!destinationZip || !totalWeight || !itemCount) {
+    return res.status(400).json({ success: false, error: "Missing required fields" });
   }
+
+  const quote = calculateQuote({ destinationZip, totalWeight, itemCount });
+  res.json({ success: true, quote });
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Quote server running on port ${PORT}`));
