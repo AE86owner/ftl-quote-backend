@@ -1,58 +1,52 @@
-require("dotenv").config();
-const express = require("express");
-const bodyParser = require("body-parser");
+const express = require('express');
+const bodyParser = require('body-parser');
+const axios = require('axios');
+const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
 app.use(bodyParser.json());
 
-// Quote logic function
-function calculateQuote({ destinationZip, totalWeight, itemCount }) {
-  const originZip = "37917";
+app.post('/api/distance', async (req, res) => {
+  const { origin, destination } = req.body;
 
-  const miles = estimateMiles(originZip, destinationZip);
-  const baseRatePerMile = 1.25;
-  const weightFactor = totalWeight > 1000 ? 1.1 : 1.0;
-  const shippingCost = Math.round(miles * baseRatePerMile * weightFactor);
-
-  const unitCost = 4.25;
-  const costPerItemWithShipping = unitCost + (shippingCost / itemCount);
-  const totalCost = Math.round(costPerItemWithShipping * itemCount);
-
-  return {
-    origin: originZip,
-    destination: destinationZip,
-    miles,
-    totalWeight,
-    itemCount,
-    shippingCost,
-    unitCost,
-    costPerItemWithShipping: parseFloat(costPerItemWithShipping.toFixed(2)),
-    totalCost
-  };
-}
-
-// Dummy distance estimator
-function estimateMiles(fromZip, toZip) {
-  const zipDistanceMap = {
-    "37920": 12,
-    "38104": 380,
-    "30303": 210,
-    "10001": 650
-  };
-  return zipDistanceMap[toZip] || 250;
-}
-
-// API endpoint to return quote
-app.post("/api/get-quote", (req, res) => {
-  const { destinationZip, totalWeight, itemCount } = req.body;
-
-  if (!destinationZip || !totalWeight || !itemCount) {
-    return res.status(400).json({ success: false, error: "Missing required fields" });
+  if (!origin || !destination) {
+    return res.status(400).json({ error: 'Missing origin or destination ZIP code.' });
   }
 
-  const quote = calculateQuote({ destinationZip, totalWeight, itemCount });
-  res.json({ success: true, quote });
+  try {
+    const response = await axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', {
+      params: {
+        origins: origin,
+        destinations: destination,
+        key: process.env.GOOGLE_API_KEY,
+        units: 'imperial'
+      }
+    });
+
+    const element = response.data.rows[0].elements[0];
+
+    if (element.status !== "OK") {
+      return res.status(400).json({ error: 'Invalid ZIP code or no route found.' });
+    }
+
+    const distanceMiles = (element.distance.value / 1609.34).toFixed(2);
+
+    res.json({
+      origin,
+      destination,
+      distance_miles: distanceMiles,
+      raw: element.distance.text
+    });
+  } catch (error) {
+    console.error('Distance API error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch distance.' });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Quote server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
