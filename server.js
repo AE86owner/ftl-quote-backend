@@ -20,7 +20,7 @@ app.post("/api/send-quote", async (req, res) => {
   console.log("EMAIL_PASSWORD:", process.env.EMAIL_PASSWORD ? "✔️ Present" : "❌ Missing");
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.office365.com",
+    host: "gmail",
     port: 587,
     secure: false,
     auth: {
@@ -31,7 +31,7 @@ app.post("/api/send-quote", async (req, res) => {
 
   const mailOptions = {
     from: process.env.EMAIL_USERNAME,
-    to: "dax@volunteerdrum.com",
+    to: "drumquotez@gmail.com",
     subject: "New Quote Submission",
     text: `
 Quote submitted by: ${from}
