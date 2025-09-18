@@ -1,14 +1,7 @@
-services:
-  - type: web
-    name: ftl-quote-backend
-    env: node
-    rootDir: .
-    buildCommand: npm install
-    startCommand: npm start
-    envVars:
-      - key: EMAIL_USERNAME
-        value: your-email@outlook.com
-      - key: EMAIL_PASSWORD
-        value: your-app-password
-      - key: PORT
-        value: 10000
+envVars:
+  - key: EMAIL_USERNAME
+    value: your-email@outlook.com
+  - key: EMAIL_PASSWORD
+    value: your-app-password
+  - key: PORT
+    value: 10000
