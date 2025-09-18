@@ -55,8 +55,6 @@ Total Cost: $${quote.totalCost}
   }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(process.env.PORT || 10000, () => {
+  console.log(`Server running on port ${process.env.PORT || 10000}`);
+});
