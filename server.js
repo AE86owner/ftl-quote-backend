@@ -19,15 +19,13 @@ app.post("/api/send-quote", async (req, res) => {
   console.log("EMAIL_USERNAME:", process.env.EMAIL_USERNAME);
   console.log("EMAIL_PASSWORD:", process.env.EMAIL_PASSWORD ? "✔️ Present" : "❌ Missing");
 
-  const transporter = nodemailer.createTransport({
-    host: "gmail",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
 
   const mailOptions = {
     from: process.env.EMAIL_USERNAME,
