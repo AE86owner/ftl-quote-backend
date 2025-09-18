@@ -15,6 +15,10 @@ app.post("/api/send-quote", async (req, res) => {
     return res.status(400).json({ success: false, error: "Missing required fields" });
   }
 
+  // 🔍 Diagnostic logging
+  console.log("EMAIL_USERNAME:", process.env.EMAIL_USERNAME);
+  console.log("EMAIL_PASSWORD:", process.env.EMAIL_PASSWORD ? "✔️ Present" : "❌ Missing");
+
   const transporter = nodemailer.createTransport({
     host: "smtp.office365.com",
     port: 587,
@@ -50,6 +54,9 @@ Total Cost: $${quote.totalCost}
     res.status(500).json({ success: false, error: "Email failed to send" });
   }
 });
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
