@@ -2,8 +2,10 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
 app.post("/api/send-quote", async (req, res) => {
@@ -14,7 +16,9 @@ app.post("/api/send-quote", async (req, res) => {
   }
 
   const transporter = nodemailer.createTransport({
-    service: "outlook",
+    host: "smtp.office365.com",
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD
